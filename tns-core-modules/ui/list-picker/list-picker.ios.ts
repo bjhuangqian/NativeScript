@@ -14,8 +14,6 @@ export class ListPicker extends ListPickerBase {
         this.nativeView = this._ios = UIPickerView.new();
         this._ios.dataSource = this._dataSource = ListPickerDataSource.initWithOwner(new WeakRef(this));
         this._delegate = ListPickerDelegateImpl.initWithOwner(new WeakRef(this));
-
-        this.nativeView = this._ios;
     }
 
     public onLoaded() {

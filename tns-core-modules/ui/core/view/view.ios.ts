@@ -27,6 +27,7 @@ export class View extends ViewCommon {
     private _privateFlags: number = PFLAG_LAYOUT_REQUIRED | PFLAG_FORCE_LAYOUT;
     private _cachedFrame: CGRect;
     private _suspendCATransaction = false;
+    _nativeBackgroundInvalid: boolean;
 
     // get nativeView(): UIView {
     //     return this.ios;
@@ -90,6 +91,9 @@ export class View extends ViewCommon {
 
         if (sizeChanged) {
             this._onSizeChanged();
+        } else if (this._nativeBackgroundInvalid) {
+            let background = this.style.backgroundInternal;
+            this._redrawNativeBackground(background);
         }
 
         this._privateFlags &= ~PFLAG_FORCE_LAYOUT;
@@ -208,7 +212,7 @@ export class View extends ViewCommon {
 
         let myPointInWindow = this.nativeView.convertPointToView(this.nativeView.bounds.origin, null);
         let otherPointInWindow = otherView.nativeView.convertPointToView(otherView.nativeView.bounds.origin, null);
-        return {
+        return {  
             x: myPointInWindow.x - otherPointInWindow.x,
             y: myPointInWindow.y - otherPointInWindow.y
         };
@@ -221,8 +225,10 @@ export class View extends ViewCommon {
         }
 
         let background = this.style.backgroundInternal;
-        if (!background.isEmpty() && this[backgroundInternalProperty.setNative]) {
-            this[backgroundInternalProperty.setNative](background);
+        const backgroundDependsOnSize = background.image || !background.hasUniformBorder();
+
+        if (this._nativeBackgroundInvalid || backgroundDependsOnSize) {
+            this._redrawNativeBackground(background);
         }
 
         let clipPath = this.style.clipPath;
@@ -272,7 +278,7 @@ export class View extends ViewCommon {
     }
 
     public _isPresentationLayerUpdateSuspeneded() {
-        return this._suspendCATransaction || this._batchUpdateScope;
+        return this._suspendCATransaction || this._suspendNativeUpdatesCount;
     }
 
     [isEnabledProperty.getDefault](): boolean {
@@ -393,6 +399,14 @@ export class View extends ViewCommon {
         return this.nativeView.backgroundColor;
     }
     [backgroundInternalProperty.setNative](value: UIColor | Background) {
+        if (this.isLayoutValid) {
+            this._redrawNativeBackground(value);
+        } else {
+            this._nativeBackgroundInvalid = true;
+        }
+    }
+
+    _redrawNativeBackground(value: UIColor | Background): void {
         let updateSuspended = this._isPresentationLayerUpdateSuspeneded();
         if (!updateSuspended) {
             CATransaction.begin();
@@ -410,6 +424,8 @@ export class View extends ViewCommon {
         if (!updateSuspended) {
             CATransaction.commit();
         }
+
+        this._nativeBackgroundInvalid = false;
     }
 
     _setNativeClipToBounds() {
@@ -417,6 +433,7 @@ export class View extends ViewCommon {
         this.nativeView.clipsToBounds = backgroundInternal.hasBorderWidth() || backgroundInternal.hasBorderRadius();
     }
 }
+View.prototype._nativeBackgroundInvalid = false;
 
 export class CustomLayoutView extends View {
 
