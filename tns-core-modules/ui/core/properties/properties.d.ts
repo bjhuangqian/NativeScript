@@ -121,3 +121,5 @@ export function clearInheritedProperties(view: ViewBase): void;
 
 export function makeValidator<T>(...values: T[]): (value: any) => value is T;
 export function makeParser<T>(isValid: (value: any) => boolean): (value: any) => T;
+
+export function getSetProperties(view: ViewBase): [string, any][]; 

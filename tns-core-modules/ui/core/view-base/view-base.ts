@@ -11,6 +11,7 @@ import { Binding, BindingOptions, Observable, WrappedValue, PropertyChangeData, 
 import { isIOS, isAndroid } from "../../../platform";
 import { layout } from "../../../utils/utils";
 import { Length, paddingTopProperty, paddingRightProperty, paddingBottomProperty, paddingLeftProperty } from "../../styling/style-properties";
+import { DOMNode } from "../../../debugger/dom-node";
 
 // TODO: Remove this import!
 import * as types from "../../../utils/types";
@@ -20,6 +21,7 @@ import { Color } from "../../../color";
 export { isIOS, isAndroid, layout, Color };
 export * from "../bindable";
 export * from "../properties";
+
 
 import * as ssm from "../../styling/style-scope";
 let styleScopeModule: typeof ssm;
@@ -139,6 +141,7 @@ export abstract class ViewBase extends Observable implements ViewBaseDefinition 
     private _registeredAnimations: Array<KeyframeAnimation>;
     private _visualState: string;
     private _inlineStyleSelector: SelectorCore;
+    private _domNode: DOMNode;
 
     public bindingContext: any;
     public nativeView: any;
@@ -198,6 +201,7 @@ export abstract class ViewBase extends Observable implements ViewBaseDefinition 
     public _defaultPaddingBottom: number;
     public _defaultPaddingLeft: number;
 
+
     constructor() {
         super();
         this._domId = viewIdCounter++;
@@ -252,6 +256,14 @@ export abstract class ViewBase extends Observable implements ViewBaseDefinition 
         }
 
         return null;
+    }
+
+    get domNode(): DOMNode {
+        return this._domNode;
+    }
+
+    public ensureDomElement() {
+        this._domNode = new DOMNode(this);
     }
 
     // Overriden so we don't raise `poropertyChange`
@@ -533,6 +545,10 @@ export abstract class ViewBase extends Observable implements ViewBaseDefinition 
         view.parent = this;
         this._addViewCore(view, atIndex);
         view._parentChanged(null);
+
+        if (this._domNode) {
+            this._domNode.onChildAdded(view, atIndex);
+        }
     }
 
     private _setStyleScope(scope: ssm.StyleScope): void {
@@ -578,6 +594,10 @@ export abstract class ViewBase extends Observable implements ViewBaseDefinition 
         this._removeViewCore(view);
         view.parent = undefined;
         view._parentChanged(this);
+
+        if (this._domNode) {
+            this._domNode.onChildRemoved(view);
+        }
     }
 
     /**

@@ -1114,3 +1114,25 @@ export function makeParser<T>(isValid: (value: any) => boolean): (value: any) =>
         }
     };
 }
+
+
+export function getSetProperties(view: ViewBase): [string, any][] {
+    const result = [];
+
+    const ownProp = Object.getOwnPropertyNames(view).forEach(prop => {
+        result.push([prop, view[prop]]);
+    });
+
+    let symbols = Object.getOwnPropertySymbols(view);
+    for (let symbol of symbols) {
+        const property = symbolPropertyMap[symbol];
+        if (!property) {
+            continue;
+        }
+
+        const value = view[property.key];
+        result.push([property.name, value]);
+    }
+
+    return result;
+}

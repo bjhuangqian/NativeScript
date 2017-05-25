@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<Page>
-  <ScrollView>
+<Page navigatedTo="print">
+    <GridLayout rows="* * *" columns="* * *">
+        
+        <Button customProp="custom" 
+                text="hi there" 
+                fontSize="30" 
+                row="1"
+                col="0"
+                style="color: blue" 
+                class="btn" />
+
+        <Button text="add" tap="add" />
+        <Button text="remove" tap="remove" col="2" />
+        <StackLayout colSpan="3" row="2" id="container">
+            
+        </StackLayout>
+    </GridLayout>
+  
+  <!--<ScrollView>
     <StackLayout>
       <Label class="title" text="Layouts" />
       <StackLayout>
@@ -48,5 +65,5 @@
         <Button tag="animations/css-keyframes" text="css-keyframes" tap="itemTap" />
       </StackLayout>
     </StackLayout>
-  </ScrollView>
+  </ScrollView>-->
 </Page>
